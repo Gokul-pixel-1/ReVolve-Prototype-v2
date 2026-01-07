@@ -1,43 +1,53 @@
-# logic/phi_logic.py
+def calculate_phi(temperature, vibration, usage_cycles):
+    """
+    Calculate Product Health Index (PHI)
 
-def calculate_phi(temp, vibration, shock_detected, usage_count):
+    Returns:
+    - phi (0–100)
+    - penalties (list)
+    - lifecycle_stage
+    - remaining_life
     """
-    Calculates the Product Health Index (PHI) 0-100%.
-    """
-    phi = 100.0
-    
-    # 1. Thermal Penalty (Threshold: 50°C)
-    if temp > 50:
-        phi -= (temp - 50) * 1.5
-        
-    # 2. Vibration/Mechanical Stress
-    if vibration:
-        phi -= 20.0
-        
-    # 3. Critical Shock/Impact
-    if shock_detected:
-        phi -= 40.0
-        
-    # 4. Usage Decay
-    phi -= (usage_count / 1000) * 10
 
-    return max(0, min(100, round(phi, 2)))
+    phi = 100
+    penalties = []
 
-def get_status_details(phi):
-    """
-    Maps PHI to Lifecycle Stages.
-    """
-    if phi >= 80:
-        return "HEALTHY", "Optimal condition", "#28a745"
-    elif phi >= 50:
-        return "WARNING", "Maintenance required", "#ffc107"
+    # Temperature impact
+    if temperature > 60:
+        phi -= 30
+        penalties.append("High temperature (>60°C)")
+    elif temperature > 40:
+        phi -= 15
+        penalties.append("Moderate temperature (>40°C)")
+
+    # Vibration impact
+    if vibration == 1:
+        phi -= 20
+        penalties.append("Vibration detected")
+
+    # Usage cycle impact
+    if usage_cycles > 80:
+        phi -= 40
+        penalties.append("Very high usage cycles (>80)")
+    elif usage_cycles > 40:
+        phi -= 20
+        penalties.append("Moderate usage cycles (>40)")
+
+    # Clamp PHI
+    phi = max(0, min(100, phi))
+
+    # Lifecycle stage
+    if usage_cycles <= 20:
+        stage = "New"
+    elif usage_cycles <= 50:
+        stage = "Active"
+    elif usage_cycles <= 80:
+        stage = "Aging"
     else:
-        return "END-OF-LIFE", "Recycle for credits", "#dc3545"
+        stage = "Retired"
 
-def get_sustainability_metrics(phi, usage_count):
-    """
-    Calculates Carbon Score and Sustainability Index.
-    """
-    carbon_score = round((usage_count * 0.08), 2)
-    sust_index = round((phi * 0.6) + (max(0, 40 - carbon_score)), 2)
-    return sust_index, carbon_score
+    # Remaining useful life
+    max_cycles = 100
+    remaining_life = max(0, max_cycles - usage_cycles)
+
+    return phi, penalties, stage, remaining_life
